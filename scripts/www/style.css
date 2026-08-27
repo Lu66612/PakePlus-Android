@@ -1,0 +1,722 @@
+/* ==========================================================================
+   每日打卡 - 全部样式（纯静态重写版）
+   说明：
+   - 全程不用 CSS Grid / flex-wrap + fr / aspect-ratio 这类容易出现
+     "列宽算成 0 或高度塌陷" 的布局模式；
+   - 日历严格使用 HTML table（table-layout:fixed 每列 1/7），
+     每个单元格高度、宽度写死为确定的值，100% 不会塌陷；
+   - 所有容器 box-sizing:border-box，避免内外边距撑开超界。
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC",
+    "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-size: 14px;
+  color: #1f2937;
+  background: #f3f4f6;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+}
+
+.app {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 16px 14px 40px;
+}
+
+/* ---------- 页头 ---------- */
+.page-header {
+  text-align: center;
+  padding: 6px 0 18px;
+}
+.today-info {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+}
+
+/* ---------- 通用卡片 ---------- */
+.card {
+  width: 100%;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 20px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ---------- 打卡状态卡片 ---------- */
+.status-label {
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+.status-value {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  color: #4f46e5;
+  margin-bottom: 16px;
+}
+.status-value.checked {
+  color: #10b981;
+}
+.status-value.absent {
+  color: #ef4444;
+}
+.checkin-btn {
+  display: block;
+  width: 100%;
+  height: 52px;
+  line-height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6366f1, #7c3aed);
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.checkin-btn:active {
+  opacity: 0.85;
+}
+.checkin-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+.checkin-time {
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 8px;
+  min-height: 16px;
+}
+
+/* ---------- 统计 ---------- */
+.stats {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 8px 0;
+}
+.stat-item {
+  display: table-cell;
+  width: 33.33%;
+  text-align: center;
+  padding: 12px 8px;
+  background: #f9fafb;
+  border-radius: 12px;
+  vertical-align: middle;
+}
+.stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  color: #4f46e5;
+  line-height: 1.2;
+}
+.stat-text {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+  line-height: 1.2;
+}
+
+/* ---------- 薪资卡片 ---------- */
+.salary-row {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 8px 0;
+  margin-bottom: 12px;
+}
+.salary-row > label,
+.salary-row > input,
+.salary-row > .unit {
+  display: table-cell;
+  vertical-align: middle;
+}
+.salary-row > label {
+  width: 56px;
+  font-size: 14px;
+  color: #4b5563;
+}
+.salary-row > input {
+  width: auto;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 15px;
+  outline: none;
+  color: #111827;
+  background: #ffffff;
+}
+.salary-row > input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+}
+.salary-row > .unit {
+  width: 56px;
+  text-align: right;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.salary-result {
+  width: 100%;
+  background: #eef2ff;
+  border-radius: 14px;
+  padding: 14px 14px 12px;
+}
+.salary-result .row {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+.salary-result .row > span {
+  display: table-cell;
+}
+.salary-result .row > span:last-child {
+  text-align: right;
+}
+.salary-result .row.total {
+  font-size: 16px;
+  font-weight: 700;
+  color: #4338ca;
+  padding-top: 8px;
+  margin-top: 6px;
+  border-top: 1px dashed #c7d2fe;
+  margin-bottom: 0;
+}
+.salary-formula {
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: #ffffff;
+  border-radius: 10px;
+  font-size: 12px;
+  color: #4b5563;
+  line-height: 1.7;
+  font-family: Menlo, Consolas, "Courier New", monospace;
+  word-break: break-all;
+}
+
+/* ---------- 月份导航 ---------- */
+.month-nav {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  margin-bottom: 8px;
+}
+.month-nav > * {
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+}
+.month-nav .month-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #6366f1;
+  font-size: 18px;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.month-nav .month-btn:active {
+  background: #eef2ff;
+}
+.month-nav .month-label {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+/* ---------- 日历卡片（重点：纯白容器 overflow:hidden，绝对不允许溢出） ---------- */
+.calendar-card {
+  padding: 16px 14px 12px;
+}
+.calendar-wrap {
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0 auto 8px;
+  box-sizing: border-box;
+}
+.calendar-wrap table.cal-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 4px 4px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+.calendar-wrap table.cal-table col.cal-col {
+  width: 14.2857%;
+}
+.calendar-wrap table.cal-table th.cal-head {
+  height: 28px;
+  line-height: 28px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  padding: 0;
+  background: transparent;
+  border: none;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.calendar-wrap table.cal-table td.cal-cell {
+  height: 40px;
+  line-height: 40px;
+  text-align: center;
+  vertical-align: middle;
+  font-size: 13px;
+  font-weight: 500;
+  color: #1f2937;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: #f9fafb;
+  border-radius: 8px;
+  cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.calendar-wrap table.cal-table td.cal-cell.empty {
+  background: transparent;
+  cursor: default;
+  visibility: hidden;
+}
+.calendar-wrap table.cal-table td.cal-cell.future {
+  color: #d1d5db;
+  background: transparent;
+  cursor: default;
+}
+.calendar-wrap table.cal-table td.cal-cell.checked {
+  background: #10b981;
+  color: #ffffff;
+  font-weight: 600;
+}
+.calendar-wrap table.cal-table td.cal-cell.supplement {
+  background: #f59e0b;
+  color: #ffffff;
+  font-weight: 600;
+}
+.calendar-wrap table.cal-table td.cal-cell.absent {
+  background: #ef4444;
+  color: #ffffff;
+  font-weight: 600;
+}
+.calendar-wrap table.cal-table td.cal-cell.today {
+  outline: 2px solid #6366f1;
+  outline-offset: -2px;
+}
+.calendar-wrap .calendar-placeholder {
+  padding: 30px 0;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+/* 图例 */
+.cal-legend {
+  width: 100%;
+  padding-top: 4px;
+  text-align: center;
+  font-size: 12px;
+  color: #6b7280;
+}
+.legend-item {
+  display: inline-block;
+  margin: 0 8px;
+  vertical-align: middle;
+}
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+.legend-checked {
+  background: #10b981;
+}
+.legend-supplement {
+  background: #f59e0b;
+}
+.legend-absent {
+  background: #ef4444;
+}
+.legend-today {
+  background: #ffffff;
+  border: 1px solid #6366f1;
+}
+
+/* ---------- 工具按钮 ---------- */
+.toolbar {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 6px 0;
+  margin-bottom: 10px;
+}
+.tool-btn {
+  display: table-cell;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 6px;
+  font-size: 13px;
+  color: #4b5563;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+}
+.tool-btn:active {
+  background: #f3f4f6;
+}
+.tool-btn-danger {
+  color: #b91c1c;
+}
+
+/* ---------- Tabs ---------- */
+.tabs {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 4px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  border-collapse: separate;
+  border-spacing: 4px 0;
+}
+.tab {
+  display: table-cell;
+  text-align: center;
+  height: 40px;
+  line-height: 40px;
+  font-size: 14px;
+  color: #6b7280;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.tab.active {
+  background: #6366f1;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* ---------- 记录列表 ---------- */
+.record-list {
+  width: 100%;
+}
+.empty {
+  width: 100%;
+  padding: 36px 0;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 13px;
+}
+.record-item {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: #f9fafb;
+  border-radius: 12px;
+  border-left: 3px solid #10b981;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.record-item.supplement {
+  border-left-color: #f59e0b;
+}
+.record-item.weekend {
+  opacity: 0.85;
+}
+.record-item > div {
+  display: table-cell;
+  vertical-align: middle;
+}
+.record-item > div:last-child {
+  text-align: right;
+  white-space: nowrap;
+}
+.record-date {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+  line-height: 1.2;
+}
+.record-weekday {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+  line-height: 1.2;
+}
+.record-meta {
+  font-size: 0;
+}
+.record-tag {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #10b981;
+  color: #ffffff;
+  margin-right: 6px;
+  line-height: 1.4;
+}
+.record-tag.supplement {
+  background: #f59e0b;
+}
+.record-tag.absent {
+  background: #ef4444;
+}
+.record-time {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 14px;
+  color: #4338ca;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+/* ---------- 通用 Modal ---------- */
+.modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 20px;
+}
+.modal-mask.show {
+  display: flex;
+}
+.modal {
+  width: 100%;
+  max-width: 360px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 22px 20px 20px;
+  box-sizing: border-box;
+  text-align: center;
+}
+.modal h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #111827;
+}
+.modal p {
+  margin: 0 0 18px;
+  font-size: 14px;
+  color: #4b5563;
+  line-height: 1.5;
+}
+.modal .btns {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 10px 0;
+}
+.modal .btns > button {
+  display: table-cell;
+  width: 50%;
+  height: 40px;
+  line-height: 40px;
+  padding: 0;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn-cancel {
+  background: #f3f4f6;
+  color: #4b5563;
+}
+.btn-ok {
+  background: #6366f1;
+  color: #ffffff;
+}
+.btn-danger {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+/* ---------- 编辑弹窗 ---------- */
+.edit-modal {
+  text-align: left;
+}
+.edit-modal h3 {
+  text-align: center;
+  margin-bottom: 16px;
+}
+.edit-row {
+  margin-bottom: 14px;
+}
+.edit-row label {
+  display: block;
+  font-size: 13px;
+  color: #4b5563;
+  margin-bottom: 6px;
+}
+.type-toggle {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 8px 0;
+}
+.type-toggle button {
+  display: table-cell;
+  width: 33.333%;
+  height: 40px;
+  line-height: 40px;
+  padding: 0;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #374151;
+  cursor: pointer;
+}
+.type-toggle button.active[data-type="checkin"] {
+  background: #10b981;
+  color: #ffffff;
+  border-color: #10b981;
+}
+.type-toggle button.active[data-type="supplement"] {
+  background: #f59e0b;
+  color: #ffffff;
+  border-color: #f59e0b;
+}
+.type-toggle button.active[data-type="absent"] {
+  background: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+.edit-row input[type="text"],
+.edit-row input[type="time"] {
+  width: 100%;
+  height: 40px;
+  line-height: 40px;
+  padding: 0 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 10px;
+  font-size: 14px;
+  outline: none;
+  color: #111827;
+  background: #ffffff;
+  box-sizing: border-box;
+}
+.edit-row input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.18);
+}
+.edit-actions {
+  width: 100%;
+  display: table;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 8px 0;
+  margin-top: 6px;
+}
+.edit-actions button {
+  display: table-cell;
+  width: 33.3%;
+  height: 40px;
+  line-height: 40px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.82);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  z-index: 200;
+  max-width: 80%;
+  text-align: center;
+  line-height: 1.4;
+}
+.toast.show {
+  opacity: 1;
+}
+
+/* ---------- PC 端居中 ---------- */
+@media (min-width: 768px) {
+  body {
+    padding-top: 24px;
+  }
+  .app {
+    max-width: 500px;
+  }
+}
