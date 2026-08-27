@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#6366f1" />
+    <title>每日打卡</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <!-- 顶部标题 -->
+      <header class="page-header">
+        <div class="today-info" id="todayDate">加载中…</div>
+        <h1 class="page-title">每日打卡</h1>
+      </header>
+
+      <!-- 打卡状态卡片 -->
+      <section class="card">
+        <div class="status-label">今日状态</div>
+        <div class="status-value" id="statusValue">未打卡</div>
+        <button type="button" class="checkin-btn" id="checkinBtn">立即打卡</button>
+        <div class="checkin-time" id="checkinTime"></div>
+      </section>
+
+      <!-- 统计卡片 -->
+      <section class="card">
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-num" id="monthCount">0</div>
+            <div class="stat-text">本月打卡</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="streak">0</div>
+            <div class="stat-text">连续天数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-num" id="totalCount">0</div>
+            <div class="stat-text">累计打卡</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 薪资卡片 -->
+      <section class="card">
+        <div class="salary-row">
+          <label for="dailySalary">日薪</label>
+          <input
+            type="number"
+            id="dailySalary"
+            name="dailySalary"
+            min="0"
+            step="1"
+            placeholder="输入日薪"
+          />
+          <span class="unit">元/天</span>
+        </div>
+        <div class="salary-result" id="salaryResult">
+          <div class="row"><span>本月正常打卡</span><span>0 天</span></div>
+          <div class="row"><span>本月补签</span><span>0 天</span></div>
+          <div class="row"><span>日薪</span><span>0.00 元/天</span></div>
+          <div class="row total"><span>本月应发月薪</span><span>0.00 元</span></div>
+          <div class="salary-formula">请先输入日薪以查看计算公式</div>
+        </div>
+      </section>
+
+      <!-- 月份导航 -->
+      <div class="month-nav">
+        <button type="button" class="month-btn" id="prevMonth" aria-label="上一月">&lt;</button>
+        <span class="month-label" id="monthLabel">—年—月</span>
+        <button type="button" class="month-btn" id="nextMonth" aria-label="下一月">&gt;</button>
+      </div>
+
+      <!-- 日历卡片 -->
+      <section class="card calendar-card">
+        <div class="calendar-wrap" id="calendarWrap">
+          <!-- 日历由 JS 渲染为 <table> -->
+          <div class="calendar-placeholder">日历加载中…</div>
+        </div>
+        <div class="cal-legend">
+          <span class="legend-item">
+            <i class="legend-dot legend-checked"></i>打卡
+          </span>
+          <span class="legend-item">
+            <i class="legend-dot legend-supplement"></i>补签
+          </span>
+          <span class="legend-item">
+            <i class="legend-dot legend-absent"></i>缺勤
+          </span>
+          <span class="legend-item">
+            <i class="legend-dot legend-today"></i>今日
+          </span>
+        </div>
+      </section>
+
+      <!-- 工具按钮 -->
+      <div class="toolbar">
+        <button type="button" class="tool-btn" id="exportBtn">导出数据</button>
+        <button type="button" class="tool-btn" id="importBtn">导入数据</button>
+        <button type="button" class="tool-btn tool-btn-danger" id="clearBtn">清空记录</button>
+      </div>
+      <input type="file" id="fileInput" accept=".json" style="display:none" />
+
+      <!-- 记录 Tab -->
+      <div class="tabs">
+        <div class="tab active" data-tab="list">记录列表</div>
+        <div class="tab" data-tab="recent">最近记录</div>
+      </div>
+
+      <!-- 记录列表 -->
+      <div class="record-list" id="recordList">
+        <div class="empty">暂无打卡记录</div>
+      </div>
+
+    </div>
+
+    <!-- 通用确认弹窗 -->
+    <div class="modal-mask" id="modalMask" role="dialog" aria-modal="true">
+      <div class="modal">
+        <h3 id="modalTitle">提示</h3>
+        <p id="modalText">确定要执行此操作吗？</p>
+        <div class="btns">
+          <button type="button" class="btn-cancel" id="modalCancel">取消</button>
+          <button type="button" class="btn-ok" id="modalOk">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑/补签弹窗 -->
+    <div class="modal-mask" id="editMask" role="dialog" aria-modal="true">
+      <div class="modal edit-modal">
+        <h3 id="editTitle">补签 / 编辑</h3>
+        <div class="edit-row">
+          <label for="editDate">日期</label>
+          <input type="text" id="editDate" readonly />
+        </div>
+        <div class="edit-row">
+          <label>类型</label>
+          <div class="type-toggle">
+            <button type="button" data-type="checkin" id="typeCheckin">打卡</button>
+            <button type="button" data-type="supplement" id="typeSupplement">补签</button>
+            <button type="button" data-type="absent" id="typeAbsent">缺勤</button>
+          </div>
+        </div>
+        <div class="edit-row">
+          <label for="editTime">时间</label>
+          <input type="time" id="editTime" />
+        </div>
+        <div class="edit-row">
+          <label for="editNote">备注（可选）</label>
+          <input type="text" id="editNote" placeholder="备注信息" />
+        </div>
+        <div class="edit-actions">
+          <button type="button" class="btn-cancel" id="editCancel">取消</button>
+          <button type="button" class="btn-ok" id="editSave">保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
